@@ -1,78 +1,5 @@
 # depslib dependency file v1.0
-1292418720 source:f:\git\r3a110\ext-fmod\main.c
-	<stdio.h>
-	<stdlib.h>
-	<windows.h>
-	"reb-host.h"
-	"inc/fmod.h"
-	"inc/fmod_dsp.h"
-	"inc/fmod_errors.h"
-	"rebstr-fce.c"
-
-1289348866 f:\git\r3a110\src\include\reb-host.h
-	"reb-config.h"
-	"reb-c.h"
-	"reb-ext.h"
-	"reb-args.h"
-	"reb-device.h"
-	"reb-file.h"
-	"reb-event.h"
-	"reb-evtypes.h"
-	"reb-net.h"
-	"reb-filereq.h"
-	"reb-gob.h"
-	"reb-lib.h"
-
-1289348866 f:\git\r3a110\src\include\reb-config.h
-	"reb-to.h"
-
-1289349202 f:\git\r3a110\src\include\reb-to.h
-
-1289348866 f:\git\r3a110\src\include\reb-c.h
-
-1289349718 f:\git\r3a110\src\include\reb-ext.h
-	"reb-defs.h"
-	"ext-types.h"
-
-1289348866 f:\git\r3a110\src\include\reb-defs.h
-
-1289348866 f:\git\r3a110\src\include\ext-types.h
-
-1289348866 f:\git\r3a110\src\include\reb-args.h
-
-1289348866 f:\git\r3a110\src\include\reb-device.h
-
-1289348866 f:\git\r3a110\src\include\reb-file.h
-
-1289348866 f:\git\r3a110\src\include\reb-event.h
-
-1289348866 f:\git\r3a110\src\include\reb-evtypes.h
-
-1289348866 f:\git\r3a110\src\include\reb-net.h
-
-1289348866 f:\git\r3a110\src\include\reb-filereq.h
-
-1289348866 f:\git\r3a110\src\include\reb-gob.h
-
-1289382736 f:\git\r3a110\src\include\reb-lib.h
-
-1291135140 f:\git\r3a110\ext-fmod\inc\fmod.h
-	"fmod_codec.h"
-	"fmod_dsp.h"
-	"fmod_memoryinfo.h"
-
-1291135140 f:\git\r3a110\ext-fmod\inc\fmod_codec.h
-
-1291135140 f:\git\r3a110\ext-fmod\inc\fmod_dsp.h
-
-1291135140 f:\git\r3a110\ext-fmod\inc\fmod_memoryinfo.h
-
-1291135140 f:\git\r3a110\ext-fmod\inc\fmod_errors.h
-	"fmod.h"
-
-1292410444 f:\git\r3a110\ext-fmod\rebstr-fce.c
-
-1292423650 source:f:\git\r3\ext-fmod\main.c
+1292443608 source:f:\git\r3\r3-extension-fmod\main.c
 	<stdio.h>
 	<stdlib.h>
 	<windows.h>
@@ -130,21 +57,21 @@
 
 1292420224 f:\git\r3\r3a110\src\include\reb-lib.h
 
-1292422926 f:\git\r3\ext-fmod\reb-ext-local.h
+1292422926 f:\git\r3\r3-extension-fmod\reb-ext-local.h
 
-1291135140 f:\git\r3\ext-fmod\inc\fmod.h
+1291135140 f:\git\r3\r3-extension-fmod\inc\fmod.h
 	"fmod_codec.h"
 	"fmod_dsp.h"
 	"fmod_memoryinfo.h"
 
-1291135140 f:\git\r3\ext-fmod\inc\fmod_codec.h
+1291135140 f:\git\r3\r3-extension-fmod\inc\fmod_codec.h
 
-1291135140 f:\git\r3\ext-fmod\inc\fmod_dsp.h
+1291135140 f:\git\r3\r3-extension-fmod\inc\fmod_dsp.h
 
-1291135140 f:\git\r3\ext-fmod\inc\fmod_memoryinfo.h
+1291135140 f:\git\r3\r3-extension-fmod\inc\fmod_memoryinfo.h
 
-1291135140 f:\git\r3\ext-fmod\inc\fmod_errors.h
+1291135140 f:\git\r3\r3-extension-fmod\inc\fmod_errors.h
 	"fmod.h"
 
-1292410444 f:\git\r3\ext-fmod\rebstr-fce.c
+1292410444 f:\git\r3\r3-extension-fmod\rebstr-fce.c
 

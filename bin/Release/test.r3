@@ -25,6 +25,9 @@ with fmod [
 			probe GetNumTags  snd1
 		]
 		probe ch1: playSound snd1
+		print ["Channel1 speaker mix:" mold mixdata: Channel/GetSpeakerMix ch1]
+		;mxdata means: [frontleft frontright center lfe backleft backright sideleft sideright]
+		print ["plaing only right speakers:" Channel/SetSpeakerMix ch1 [0.0 1.0 0.0 0.0 0.0 1.0 0.0 1.0]]
 	]
 	print "--^/creating local sound:"
 	probe snd2: createSound  "fletna3.mp3"

@@ -565,7 +565,7 @@ const char *init_block =
 		"GetPan: command[channel [handle!] ]\n"
 		"SetDelay: command[channel [handle!] delayhi [integer!] delaylo [integer!] ]\n"
 		"GetDelay: command[channel [handle!] ]\n"
-		"SetSpeakerMix: command[channel [handle!] frontleft [decimal!] frontright [decimal!] center [decimal!] lfe [decimal!] backleft [decimal!] backright [decimal!] sideleft [decimal!] sideright [decimal!] ]\n"
+		"SetSpeakerMix: command[channel [handle!] mixdata [block!] {[frontleft frontright center lfe backleft backright sideleft sideright]} ]\n"
 		"GetSpeakerMix: command[channel [handle!] ]\n"
 		"SetSpeakerLevels: command[channel [handle!] numlevels [integer!] ]\n"
 		"GetSpeakerLevels: command[channel [handle!] numlevels [integer!] ]\n"
@@ -640,7 +640,7 @@ const char *init_block =
 		"OverridePan: command[channelgroup [handle!] pan [decimal!] ]\n"
 		"OverrideReverbProperties: command[{TODO}]\n"
 		"Override3DAttributes: command[{TODO}]\n"
-		"OverrideSpeakerMix: command[channelgroup [handle!] frontleft [decimal!] frontright [decimal!] center [decimal!] lfe [decimal!] backleft [decimal!] backright [decimal!] sideleft [decimal!] sideright [decimal!] ]\n"
+		"OverrideSpeakerMix: command[channelgroup [handle!] mixdata [block!] {[frontleft frontright center lfe backleft backright sideleft sideright]} ]\n"
 		"AddGroup: command[channelgroup [handle!] group [handle!] ]\n"
 		"GetNumGroups: command[channelgroup [handle!] ]\n"
 		"GetGroup: command[channelgroup [handle!] index [integer!] ]\n"
@@ -2090,10 +2090,25 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			return RXR_VALUE;
 		}
 		case CMD_FMOD_Channel_SetSpeakerMix: {
-/* SPEC: (FMOD_CHANNEL *channel, float frontleft, float frontright, float center, float lfe, float backleft, float backright, float sideleft, float sideright) */
-			ERRCHECK(FMOD_Channel_SetSpeakerMix((FMOD_CHANNEL*)RXA_HANDLE(frm, 1), (float)RXA_DEC64(frm, 2), (float)RXA_DEC64(frm, 3), (float)RXA_DEC64(frm, 4), (float)RXA_DEC64(frm, 5), (float)RXA_DEC64(frm, 6), (float)RXA_DEC64(frm, 7), (float)RXA_DEC64(frm, 8), (float)RXA_DEC64(frm, 9)));
-			return RXR_TRUE;
-		}
+/* SPEC: (FMOD_CHANNEL *channel, float frontleft, float frontright, float center, float lfe, float backleft, float backright, float sideleft, float sideright) */			RXIARG val;
+			RL_GET_VALUE(RXA_SERIES(frm, 2),0,&val);
+			float frontleft = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),1,&val);
+			float frontright = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),2,&val);
+			float center = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),3,&val);
+			float lfe = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),4,&val);
+			float backleft = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),5,&val);
+			float backright = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),6,&val);
+			float sideleft = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),7,&val);
+			float sideright = RXV_DEC64(val);
+			ERRCHECK(FMOD_Channel_SetSpeakerMix((FMOD_CHANNEL*)RXA_HANDLE(frm, 1), frontleft, frontright, center, lfe, backleft, backright, sideleft, sideright));
+			return RXR_TRUE;		}
 		case CMD_FMOD_Channel_GetSpeakerMix: {
 /* SPEC: (FMOD_CHANNEL *channel, float *frontleft, float *frontright, float *center, float *lfe, float *backleft, float *backright, float *sideleft, float *sideright) */
 			float frontleft;
@@ -2543,9 +2558,26 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 /* TODO: (FMOD_CHANNELGROUP *channelgroup, const FMOD_VECTOR *pos, const FMOD_VECTOR *vel) */
 			return RXR_ERROR;
 		}
-		case CMD_FMOD_ChannelGroup_OverrideSpeakerMix: {
+        case CMD_FMOD_ChannelGroup_OverrideSpeakerMix: {
 /* SPEC: (FMOD_CHANNELGROUP *channelgroup, float frontleft, float frontright, float center, float lfe, float backleft, float backright, float sideleft, float sideright) */
-			ERRCHECK(FMOD_ChannelGroup_OverrideSpeakerMix((FMOD_CHANNELGROUP*)RXA_HANDLE(frm, 1), (float)RXA_DEC64(frm, 2), (float)RXA_DEC64(frm, 3), (float)RXA_DEC64(frm, 4), (float)RXA_DEC64(frm, 5), (float)RXA_DEC64(frm, 6), (float)RXA_DEC64(frm, 7), (float)RXA_DEC64(frm, 8), (float)RXA_DEC64(frm, 9)));
+			RXIARG val;
+			RL_GET_VALUE(RXA_SERIES(frm, 2),0,&val);
+			float frontleft = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),1,&val);
+			float frontright = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),2,&val);
+			float center = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),3,&val);
+			float lfe = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),4,&val);
+			float backleft = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),5,&val);
+			float backright = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),6,&val);
+			float sideleft = RXV_DEC64(val);
+			RL_GET_VALUE(RXA_SERIES(frm, 2),7,&val);
+			float sideright = RXV_DEC64(val);
+			ERRCHECK(FMOD_ChannelGroup_OverrideSpeakerMix((FMOD_CHANNELGROUP*)RXA_HANDLE(frm, 1), frontleft, frontright, center, lfe, backleft, backright, sideleft, sideright));
 			return RXR_TRUE;
 		}
 		case CMD_FMOD_ChannelGroup_AddGroup: {
