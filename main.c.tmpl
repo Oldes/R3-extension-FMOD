@@ -1,0 +1,200 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <windows.h>
+#include "reb-host.h"
+
+#include "inc/fmod.h"
+#include "inc/fmod_dsp.h"
+#include "inc/fmod_errors.h"
+
+#include "rebstr-fce.c"
+
+RL_LIB *RL;
+
+
+/* error handling */
+FMOD_RESULT lastError;
+void StoreError(FMOD_RESULT errType) {
+	lastError = errType;
+	RL->print((REBYTE*)"!!! FMOD ERROR: %d\n", errType);
+}
+#define ERRCHECK(result)\
+{\
+	if (result != FMOD_OK)\
+	{\
+		StoreError(result);\
+		return RXR_FALSE;\
+	}\
+}
+/* -------------- */
+
+
+enum fmod_commands {
+	CMD_FMOD_init,
+	CMD_FMOD_GetLastError,
+	CMD_FMOD_createSound,
+	CMD_FMOD_createStream,
+	CMD_FMOD_channelStop,
+	CMD_FMOD_playSound,
+/* generated */
+<%RXT-CMD-ENUM%>
+};
+
+const char *init_block =
+	"REBOL [\n"
+		"Title: {Testing FMOD extension}\n"
+		"Name: FMOD\n"
+		"Type: extension\n"
+	"]\n"
+	"export init: command []\n"
+	"export GetLastError: command []\n"
+	"export createSound: command [file [string!]]\n"
+	"export createStream: command [file [string!]]\n"
+	"export channelStop: command [channel [handle! none!]]\n"
+	"export playSound: command [snd [handle!]]\n"
+/* generated */
+<%RXT-CMD-INIT-BLOCK%>
+;
+
+
+
+static FMOD_SYSTEM *sys=NULL;
+FMOD_RESULT 	 result;
+FMOD_SOUND		*sound		   = 0;
+FMOD_CHANNEL	*channel	   = 0;
+FMOD_DSP		*dsplowpass    = 0;
+FMOD_DSP		*dsphighpass   = 0;
+FMOD_DSP		*dspecho	   = 0;
+FMOD_DSP		*dspflange	   = 0;
+FMOD_DSP		*dspdistortion = 0;
+FMOD_DSP		*dspchorus	   = 0;
+FMOD_DSP		*dspparameq    = 0;
+char  *tmpBuffer1 = 0;
+char  *tmpBuffer2 = 0;
+char  *tmpBuffer3 = 0;
+char  *tmpBuffer4 = 0;
+
+
+RXIEXT const char *RX_Init(int opts, RL_LIB *lib) {
+	RL = lib;
+	unsigned int version;
+	FMOD_System_Create( &sys );
+	FMOD_System_GetVersion(sys, &version);
+	RL->print((REBYTE*)"FMOD version: %d, require: %d\n", version, FMOD_VERSION);
+	if (version < FMOD_VERSION) return "REBOL[]";
+	tmpBuffer1=(char *)malloc(256);
+	tmpBuffer2=(char *)malloc(256);
+	tmpBuffer3=(char *)malloc(256);
+	tmpBuffer4=(char *)malloc(256);
+	return init_block;
+}
+
+int RX_Call(int cmd, RXIFRM *frm, void *data) {
+	switch (cmd) {
+		case CMD_FMOD_init: {
+
+			ERRCHECK(FMOD_System_Init(sys, 32, FMOD_INIT_NORMAL, NULL));
+
+			/*
+				Create some effects to play with.
+			*/
+			ERRCHECK(FMOD_System_CreateDSPByType(sys, FMOD_DSP_TYPE_LOWPASS, &dsplowpass));
+			ERRCHECK(FMOD_System_CreateDSPByType(sys, FMOD_DSP_TYPE_HIGHPASS, &dsphighpass));
+			ERRCHECK(FMOD_System_CreateDSPByType(sys, FMOD_DSP_TYPE_ECHO, &dspecho));
+			ERRCHECK(FMOD_System_CreateDSPByType(sys, FMOD_DSP_TYPE_FLANGE, &dspflange));
+			ERRCHECK(FMOD_System_CreateDSPByType(sys, FMOD_DSP_TYPE_DISTORTION, &dspdistortion));
+			ERRCHECK(FMOD_System_CreateDSPByType(sys, FMOD_DSP_TYPE_CHORUS, &dspchorus));
+			ERRCHECK(FMOD_System_CreateDSPByType(sys, FMOD_DSP_TYPE_PARAMEQ, &dspparameq));
+
+			return RXR_TRUE;
+		}
+		case CMD_FMOD_GetLastError: {
+			RXA_INT64(frm, 1) = (int)lastError;
+			RXA_TYPE(frm, 1) = RXT_INTEGER;
+			return RXR_VALUE;
+		}
+		case CMD_FMOD_createSound: {
+			FMOD_SOUND *newSound = 0;
+			const char *name = RebserToMultiByte(RXA_SERIES(frm, 1));
+			result = FMOD_System_CreateSound(
+			  sys,
+			  name,
+			  FMOD_HARDWARE | FMOD_LOOP_NORMAL | FMOD_2D,
+			  0,
+			  &newSound
+			);
+			free((void*)name);
+			ERRCHECK(result);
+
+			RL->print((REBYTE*)"newSound: %d\n", (REBINT)newSound);
+			RXA_INT64(frm, 1) = (int)newSound;
+			RXA_TYPE(frm, 1) = RXT_HANDLE;
+			return RXR_VALUE;
+		}
+		case CMD_FMOD_createStream: {
+			FMOD_SOUND *newSound = 0;
+			const char *name = RebserToMultiByte(RXA_SERIES(frm, 1));
+			result = FMOD_System_CreateStream(
+				sys,
+				name,
+				FMOD_HARDWARE |FMOD_LOOP_NORMAL | FMOD_2D,
+				0,
+				&newSound
+			);
+			free((void*)name);
+			ERRCHECK(result);
+
+			RL->print((REBYTE*)"newSound: %d\n", (REBINT)newSound);
+			RXA_INT64(frm, 1) = (int)newSound;
+			RXA_TYPE(frm, 1) = RXT_HANDLE;
+			return RXR_VALUE;
+		}
+		case CMD_FMOD_playSound: {
+			RL->print((REBYTE*)"playSound: %d\n", (REBINT)RXA_HANDLE(frm, 1));
+			result = FMOD_System_PlaySound(
+			  sys,
+			  FMOD_CHANNEL_FREE,
+			  (FMOD_SOUND *)RXA_HANDLE(frm, 1),
+			  FALSE,
+			  &channel
+			);
+			ERRCHECK(result);
+
+			RL->print((REBYTE*)"channel %d\n", (REBINT)channel);
+
+			//FMOD_Channel_SetPan(channel, -1 );
+
+
+		   // result = FMOD_System_AddDSP(sys, dspecho, 0);
+		   // result = FMOD_System_AddDSP(sys, dspflange, 0);
+			/*FMOD_Channel_SetReverbProperties(
+			  &channel,
+			  const FMOD_REVERB_CHANNELPROPERTIES *  prop
+			);
+			*/
+
+			/*result = FMOD_Channel_SetPosition(
+			  channel,
+			  2000,
+			  FMOD_TIMEUNIT_MS
+			);
+			ERRCHECK(result);
+			*/
+			//channel = newChannel;
+			RXA_INT64(frm, 1) = (int)channel;
+			RXA_TYPE(frm, 1) = RXT_HANDLE;
+			return RXR_VALUE;
+		}
+		case CMD_FMOD_channelStop: {
+			if (RXA_TYPE(frm, 1) == RXT_HANDLE) {
+				channel = RXA_HANDLE(frm, 1);
+			}
+			result = FMOD_Channel_Stop(channel);
+			ERRCHECK(result);
+			return RXR_TRUE;
+		}
+/* generated */
+<%RXT-CMD-CALL%>
+	}
+	return RXR_NO_COMMAND;
+}

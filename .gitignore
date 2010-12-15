@@ -1,0 +1,5 @@
+public/*
+obj/*
+bin/Release/*.a
+bin/Release/*.def
+*.back
