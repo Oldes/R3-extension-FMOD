@@ -1,0 +1,5 @@
+This is REBOL3's extension wrapper to FMOD API.
+It has command for all 336 FMOD api functions, but 162 of them are just placeholders as it require more work.
+I must say that this is my first C project which I'm using to learn C and REBOL Extensions, so feel free to correct me if you can.
+
+Also I must note, that the main.c file was automaticaly generated so it's possible that not everything works, I tested just basics so far.
