@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
+
+#define TO_WIN32
+
 #include "reb-host.h"
+#include "reb-ext-local.h"
 
 #include "inc/fmod.h"
 #include "inc/fmod_dsp.h"
@@ -27,15 +31,22 @@ void StoreError(FMOD_RESULT errType) {
 	}\
 }
 /* -------------- */
+static u32* fmod_ext_words;
 
+enum fmod_words {
+	W_0=0,
+<%RXT-WORDS-ENUM%>
+};
 
 enum fmod_commands {
 	CMD_FMOD_init,
+	CMD_FMOD_init_words,
 	CMD_FMOD_GetLastError,
 	CMD_FMOD_createSound,
 	CMD_FMOD_createStream,
 	CMD_FMOD_channelStop,
 	CMD_FMOD_playSound,
+	CMD_test_obj,
 /* generated */
 <%RXT-CMD-ENUM%>
 };
@@ -47,11 +58,14 @@ const char *init_block =
 		"Type: extension\n"
 	"]\n"
 	"export init: command []\n"
+	"export init-words: command [words [block!]]\n"
+	"init-words [<%RXT-WORDS%>]\n"
 	"export GetLastError: command []\n"
 	"export createSound: command [file [string!]]\n"
 	"export createStream: command [file [string!]]\n"
 	"export channelStop: command [channel [handle! none!]]\n"
 	"export playSound: command [snd [handle!]]\n"
+	"export test-obj: command [obj [object!]]\n"
 /* generated */
 <%RXT-CMD-INIT-BLOCK%>
 ;
@@ -108,6 +122,10 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 
 			return RXR_TRUE;
 		}
+		case CMD_FMOD_init_words: {
+            fmod_ext_words = RL_MAP_WORDS(RXA_SERIES(frm,1));
+            return RXR_UNSET;
+		}
 		case CMD_FMOD_GetLastError: {
 			RXA_INT64(frm, 1) = (int)lastError;
 			RXA_TYPE(frm, 1) = RXT_INTEGER;
@@ -144,7 +162,7 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			free((void*)name);
 			ERRCHECK(result);
 
-			RL->print((REBYTE*)"newSound: %d\n", (REBINT)newSound);
+			RL->print((REBYTE*)"newStream: %d\n", (REBINT)newSound);
 			RXA_INT64(frm, 1) = (int)newSound;
 			RXA_TYPE(frm, 1) = RXT_HANDLE;
 			return RXR_VALUE;
@@ -192,6 +210,56 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			result = FMOD_Channel_Stop(channel);
 			ERRCHECK(result);
 			return RXR_TRUE;
+		}
+		case CMD_test_obj: {
+
+            FMOD_REVERB_PROPERTIES prop;
+            ERRCHECK(FMOD_System_GetReverbProperties(sys, &prop));
+            REBSER *obj=0;
+            RXIARG val;
+
+            RXV_INT64(val) = prop.Instance;
+            RL_SET_FIELD(obj,fmod_ext_words[W_Instance],val,RXT_INTEGER);
+
+
+
+			    //just testing.......
+			    /*
+            u32 *words, *w;
+            REBSER *obj;
+            REBCNT type;
+            RXIARG result;
+            obj = RXA_OBJECT(frm, 1);
+            words = RL_WORDS_OF_OBJECT(obj);
+            w = words;
+            while ((type = RL_GET_FIELD(obj, w[0], &result))) {
+                RL->print((REBYTE*)"word: %d %d\n", w[0], RL_FIND_WORD(fmod_ext_words,w[0]));
+                switch(RL_FIND_WORD(fmod_ext_words,w[0])){
+                    case W_Room: {
+                        RL->print((REBYTE*)"Room: %d\n",4);
+                        RXV_DEC64(result) = 3 * RXV_DEC64(result);
+                        RL_SET_FIELD(obj, w[0], result, RXT_DECIMAL );
+                        break;
+                    }
+                    case W_Reverb: {
+                        RL->print((REBYTE*)"Reverb: %d\n",RXV_DEC64(result));
+                        if (type == RXT_INTEGER) {
+                            RXV_DEC64(result) = (float)RXV_INT64(result);
+                            RL_SET_FIELD(obj, w[0], result, RXT_DECIMAL );
+                        }
+                        break;
+                    }
+                }
+                //RL->print((REBYTE*)"type:\n");
+                w++;
+            }
+
+            */
+          //  RL_GET_FIELD(obj, RL_FIND_WORD(fmod_ext_words, 2), &result);
+          //  RL->print((REBYTE*)"xxx: %d\n", RXV_INT64(result));
+            RXA_OBJECT(frm, 1) = obj;
+			RXA_TYPE(frm, 1) = RXT_OBJECT;
+			return RXR_VALUE;
 		}
 /* generated */
 <%RXT-CMD-CALL%>

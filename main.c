@@ -31,15 +31,49 @@ void StoreError(FMOD_RESULT errType) {
 	}\
 }
 /* -------------- */
+static u32* fmod_ext_words;
 
+enum fmod_words {
+	W_0=0,
+	W_Instance,
+	W_Environment,
+	W_EnvSize,
+	W_EnvDiffusion,
+	W_Room,
+	W_RoomHF,
+	W_RoomLF,
+	W_DecayTime,
+	W_DecayHFRatio,
+	W_DecayLFRatio,
+	W_Reflections,
+	W_ReflectionsDelay,
+	W_ReflectionsPan,
+	W_Reverb,
+	W_ReverbDelay,
+	W_ReverbPan,
+	W_EchoTime,
+	W_EchoDepth,
+	W_ModulationTime,
+	W_ModulationDepth,
+	W_AirAbsorptionHF,
+	W_HFReference,
+	W_LFReference,
+	W_RoomRolloffFactor,
+	W_Diffusion,
+	W_Density,
+	W_Flags,
+
+};
 
 enum fmod_commands {
 	CMD_FMOD_init,
+	CMD_FMOD_init_words,
 	CMD_FMOD_GetLastError,
 	CMD_FMOD_createSound,
 	CMD_FMOD_createStream,
 	CMD_FMOD_channelStop,
 	CMD_FMOD_playSound,
+	CMD_test_obj,
 /* generated */
 	CMD_FMOD_Memory_Initialize,
 	CMD_FMOD_Memory_GetStats,
@@ -387,11 +421,14 @@ const char *init_block =
 		"Type: extension\n"
 	"]\n"
 	"export init: command []\n"
+	"export init-words: command [words [block!]]\n"
+	"init-words [Instance Environment EnvSize EnvDiffusion Room RoomHF RoomLF DecayTime DecayHFRatio DecayLFRatio Reflections ReflectionsDelay ReflectionsPan Reverb ReverbDelay ReverbPan EchoTime EchoDepth ModulationTime ModulationDepth AirAbsorptionHF HFReference LFReference RoomRolloffFactor Diffusion Density Flags ]\n"
 	"export GetLastError: command []\n"
 	"export createSound: command [file [string!]]\n"
 	"export createStream: command [file [string!]]\n"
 	"export channelStop: command [channel [handle! none!]]\n"
 	"export playSound: command [snd [handle!]]\n"
+	"export test-obj: command [obj [object!]]\n"
 /* generated */
 	"export Memory: context[\n"
 		"Initialize: command[{TODO}]\n"
@@ -406,7 +443,7 @@ const char *init_block =
 		"GetDiskBusy: command[]\n"
 	"]\n"
 	"export System: context[\n"
-		"SetOutput: command[]\n"
+		"SetOutput: command[output [integer!] ]\n"
 		"GetOutput: command[]\n"
 		"GetNumDrivers: command[]\n"
 		"GetDriverInfo: command[id [integer!] ]\n"
@@ -417,7 +454,7 @@ const char *init_block =
 		"SetHardwareChannels: command[min2d [integer!] max2d [integer!] min3d [integer!] max3d [integer!] ]\n"
 		"SetSoftwareChannels: command[numsoftwarechannels [integer!] ]\n"
 		"GetSoftwareChannels: command[]\n"
-		"SetSoftwareFormat: command[samplerate [integer!] numoutputchannels [integer!] maxinputchannels [integer!] ]\n"
+		"SetSoftwareFormat: command[samplerate [integer!] format [integer!] numoutputchannels [integer!] maxinputchannels [integer!] resamplemethod [integer!] ]\n"
 		"GetSoftwareFormat: command[]\n"
 		"SetDSPBufferSize: command[{TODO}]\n"
 		"GetDSPBufferSize: command[{TODO}]\n"
@@ -425,7 +462,7 @@ const char *init_block =
 		"AttachFileSystem: command[{TODO}]\n"
 		"SetAdvancedSettings: command[{TODO}]\n"
 		"GetAdvancedSettings: command[{TODO}]\n"
-		"SetSpeakerMode: command[]\n"
+		"SetSpeakerMode: command[speakermode [integer!] ]\n"
 		"GetSpeakerMode: command[]\n"
 		"SetCallback: command[{TODO}]\n"
 		"SetPluginPath: command[{TODO}]\n"
@@ -449,7 +486,7 @@ const char *init_block =
 		"Set3DRolloffCallback: command[{TODO}]\n"
 		"Set3DSpeakerPosition: command[{TODO}]\n"
 		"Get3DSpeakerPosition: command[{TODO}]\n"
-		"SetStreamBufferSize: command[filebuffersize [integer!] ]\n"
+		"SetStreamBufferSize: command[filebuffersize [integer!] filebuffersizetype [integer!] ]\n"
 		"GetStreamBufferSize: command[]\n"
 		"GetVersion: command[]\n"
 		"GetOutputHandle: command[]\n"
@@ -459,16 +496,16 @@ const char *init_block =
 		"GetSoundRAM: command[]\n"
 		"GetNumCDROMDrives: command[]\n"
 		"GetCDROMDriveName: command[drive [integer!] ]\n"
-		"GetSpectrum: command[numvalues [integer!] channeloffset [integer!] ]\n"
+		"GetSpectrum: command[numvalues [integer!] channeloffset [integer!] windowtype [integer!] ]\n"
 		"GetWaveData: command[numvalues [integer!] channeloffset [integer!] ]\n"
-		"CreateSound: command[name_or_data [string!] ]\n"
-		"CreateStream: command[name_or_data [string!] ]\n"
+		"CreateSound: command[name_or_data [string!] mode [integer!] ]\n"
+		"CreateStream: command[name_or_data [string!] mode [integer!] ]\n"
 		"CreateDSP: command[{TODO}]\n"
 		"CreateDSPByType: command[{TODO}]\n"
 		"CreateChannelGroup: command[name [string!] ]\n"
 		"CreateSoundGroup: command[name [string!] ]\n"
 		"CreateReverb: command[]\n"
-		"PlaySound: command[sound [handle!] paused [logic!] ]\n"
+		"PlaySound: command[channelid [integer!] sound [handle!] paused [logic!] ]\n"
 		"PlayDSP: command[{TODO}]\n"
 		"GetChannel: command[channelid [integer!] ]\n"
 		"GetMasterChannelGroup: command[]\n"
@@ -501,7 +538,7 @@ const char *init_block =
 		"GetNetworkTimeout: command[]\n"
 		"SetUserData: command[{TODO}]\n"
 		"GetUserData: command[{TODO}]\n"
-		"GetMemoryInfo: command[{TODO}]\n"
+		"GetMemoryInfo: command[memorybits [integer!] event_memorybits [integer!] ]\n"
 	"]\n"
 	"export Sound: context[\n"
 		"Release: command[sound [handle!] ]\n"
@@ -522,7 +559,7 @@ const char *init_block =
 		"GetSubSound: command[sound [handle!] index [integer!] ]\n"
 		"SetSubSoundSentence: command[sound [handle!] numsubsounds [integer!] ]\n"
 		"GetName: command[sound [handle!] ]\n"
-		"GetLength: command[sound [handle!] ]\n"
+		"GetLength: command[sound [handle!] lengthtype [integer!] ]\n"
 		"GetFormat: command[sound [handle!] ]\n"
 		"GetNumSubSounds: command[sound [handle!] ]\n"
 		"GetNumTags: command[sound [handle!] ]\n"
@@ -534,15 +571,15 @@ const char *init_block =
 		"GetSoundGroup: command[sound [handle!] ]\n"
 		"GetNumSyncPoints: command[sound [handle!] ]\n"
 		"GetSyncPoint: command[sound [handle!] index [integer!] ]\n"
-		"GetSyncPointInfo: command[sound [handle!] point [handle!] ]\n"
-		"AddSyncPoint: command[sound [handle!] offset [integer!] name [string!] ]\n"
+		"GetSyncPointInfo: command[sound [handle!] point [handle!] offsettype [integer!] ]\n"
+		"AddSyncPoint: command[sound [handle!] offset [integer!] offsettype [integer!] name [string!] ]\n"
 		"DeleteSyncPoint: command[sound [handle!] point [handle!] ]\n"
-		"SetMode: command[sound [handle!] ]\n"
+		"SetMode: command[sound [handle!] mode [integer!] ]\n"
 		"GetMode: command[sound [handle!] ]\n"
 		"SetLoopCount: command[sound [handle!] loopcount [integer!] ]\n"
 		"GetLoopCount: command[sound [handle!] ]\n"
-		"SetLoopPoints: command[sound [handle!] loopstart [integer!] loopend [integer!] ]\n"
-		"GetLoopPoints: command[sound [handle!] ]\n"
+		"SetLoopPoints: command[sound [handle!] loopstart [integer!] loopstarttype [integer!] loopend [integer!] loopendtype [integer!] ]\n"
+		"GetLoopPoints: command[sound [handle!] loopstarttype [integer!] loopendtype [integer!] ]\n"
 		"GetMusicNumChannels: command[sound [handle!] ]\n"
 		"SetMusicChannelVolume: command[sound [handle!] channel [integer!] volume [decimal!] ]\n"
 		"GetMusicChannelVolume: command[sound [handle!] channel [integer!] ]\n"
@@ -550,7 +587,7 @@ const char *init_block =
 		"GetMusicSpeed: command[sound [handle!] ]\n"
 		"SetUserData: command[{TODO}]\n"
 		"GetUserData: command[{TODO}]\n"
-		"GetMemoryInfo: command[{TODO}]\n"
+		"GetMemoryInfo: command[sound [handle!] memorybits [integer!] event_memorybits [integer!] ]\n"
 	"]\n"
 	"export Channel: context[\n"
 		"GetSystemObject: command[channel [handle!] ]\n"
@@ -563,20 +600,20 @@ const char *init_block =
 		"GetFrequency: command[channel [handle!] ]\n"
 		"SetPan: command[channel [handle!] pan [decimal!] ]\n"
 		"GetPan: command[channel [handle!] ]\n"
-		"SetDelay: command[channel [handle!] delayhi [integer!] delaylo [integer!] ]\n"
-		"GetDelay: command[channel [handle!] ]\n"
+		"SetDelay: command[channel [handle!] delaytype [integer!] delayhi [integer!] delaylo [integer!] ]\n"
+		"GetDelay: command[channel [handle!] delaytype [integer!] ]\n"
 		"SetSpeakerMix: command[channel [handle!] mixdata [block!] {[frontleft frontright center lfe backleft backright sideleft sideright]} ]\n"
 		"GetSpeakerMix: command[channel [handle!] ]\n"
-		"SetSpeakerLevels: command[channel [handle!] numlevels [integer!] ]\n"
-		"GetSpeakerLevels: command[channel [handle!] numlevels [integer!] ]\n"
+		"SetSpeakerLevels: command[channel [handle!] speaker [integer!] numlevels [integer!] ]\n"
+		"GetSpeakerLevels: command[channel [handle!] speaker [integer!] numlevels [integer!] ]\n"
 		"SetInputChannelMix: command[channel [handle!] numlevels [integer!] ]\n"
 		"GetInputChannelMix: command[channel [handle!] numlevels [integer!] ]\n"
 		"SetMute: command[channel [handle!] mute [logic!] ]\n"
 		"GetMute: command[channel [handle!] ]\n"
 		"SetPriority: command[channel [handle!] priority [integer!] ]\n"
 		"GetPriority: command[channel [handle!] ]\n"
-		"SetPosition: command[channel [handle!] position [integer!] ]\n"
-		"GetPosition: command[channel [handle!] ]\n"
+		"SetPosition: command[channel [handle!] position [integer!] postype [integer!] ]\n"
+		"GetPosition: command[channel [handle!] postype [integer!] ]\n"
 		"SetReverbProperties: command[{TODO}]\n"
 		"GetReverbProperties: command[{TODO}]\n"
 		"SetLowPassGain: command[channel [handle!] gain [decimal!] ]\n"
@@ -608,18 +645,18 @@ const char *init_block =
 		"IsVirtual: command[channel [handle!] ]\n"
 		"GetAudibility: command[channel [handle!] ]\n"
 		"GetCurrentSound: command[channel [handle!] ]\n"
-		"GetSpectrum: command[channel [handle!] numvalues [integer!] channeloffset [integer!] ]\n"
+		"GetSpectrum: command[channel [handle!] numvalues [integer!] channeloffset [integer!] windowtype [integer!] ]\n"
 		"GetWaveData: command[channel [handle!] numvalues [integer!] channeloffset [integer!] ]\n"
 		"GetIndex: command[channel [handle!] ]\n"
-		"SetMode: command[channel [handle!] ]\n"
+		"SetMode: command[channel [handle!] mode [integer!] ]\n"
 		"GetMode: command[channel [handle!] ]\n"
 		"SetLoopCount: command[channel [handle!] loopcount [integer!] ]\n"
 		"GetLoopCount: command[channel [handle!] ]\n"
-		"SetLoopPoints: command[channel [handle!] loopstart [integer!] loopend [integer!] ]\n"
-		"GetLoopPoints: command[channel [handle!] ]\n"
+		"SetLoopPoints: command[channel [handle!] loopstart [integer!] loopstarttype [integer!] loopend [integer!] loopendtype [integer!] ]\n"
+		"GetLoopPoints: command[channel [handle!] loopstarttype [integer!] loopendtype [integer!] ]\n"
 		"SetUserData: command[{TODO}]\n"
 		"GetUserData: command[{TODO}]\n"
-		"GetMemoryInfo: command[{TODO}]\n"
+		"GetMemoryInfo: command[channel [handle!] memorybits [integer!] event_memorybits [integer!] ]\n"
 	"]\n"
 	"export ChannelGroup: context[\n"
 		"Release: command[channelgroup [handle!] ]\n"
@@ -650,18 +687,18 @@ const char *init_block =
 		"GetName: command[channelgroup [handle!] ]\n"
 		"GetNumChannels: command[channelgroup [handle!] ]\n"
 		"GetChannel: command[channelgroup [handle!] index [integer!] ]\n"
-		"GetSpectrum: command[channelgroup [handle!] numvalues [integer!] channeloffset [integer!] ]\n"
+		"GetSpectrum: command[channelgroup [handle!] numvalues [integer!] channeloffset [integer!] windowtype [integer!] ]\n"
 		"GetWaveData: command[channelgroup [handle!] numvalues [integer!] channeloffset [integer!] ]\n"
 		"SetUserData: command[{TODO}]\n"
 		"GetUserData: command[{TODO}]\n"
-		"GetMemoryInfo: command[{TODO}]\n"
+		"GetMemoryInfo: command[channelgroup [handle!] memorybits [integer!] event_memorybits [integer!] ]\n"
 	"]\n"
 	"export SoundGroup: context[\n"
 		"Release: command[soundgroup [handle!] ]\n"
 		"GetSystemObject: command[soundgroup [handle!] ]\n"
 		"SetMaxAudible: command[soundgroup [handle!] maxaudible [integer!] ]\n"
 		"GetMaxAudible: command[soundgroup [handle!] ]\n"
-		"SetMaxAudibleBehavior: command[soundgroup [handle!] ]\n"
+		"SetMaxAudibleBehavior: command[soundgroup [handle!] behavior [integer!] ]\n"
 		"GetMaxAudibleBehavior: command[soundgroup [handle!] ]\n"
 		"SetMuteFadeSpeed: command[soundgroup [handle!] speed [decimal!] ]\n"
 		"GetMuteFadeSpeed: command[soundgroup [handle!] ]\n"
@@ -674,7 +711,7 @@ const char *init_block =
 		"GetNumPlaying: command[soundgroup [handle!] ]\n"
 		"SetUserData: command[{TODO}]\n"
 		"GetUserData: command[{TODO}]\n"
-		"GetMemoryInfo: command[{TODO}]\n"
+		"GetMemoryInfo: command[soundgroup [handle!] memorybits [integer!] event_memorybits [integer!] ]\n"
 	"]\n"
 	"export DSP: context[\n"
 		"Release: command[{TODO}]\n"
@@ -751,7 +788,7 @@ const char *init_block =
 		"GetActive: command[reverb [handle!] ]\n"
 		"SetUserData: command[{TODO}]\n"
 		"GetUserData: command[{TODO}]\n"
-		"GetMemoryInfo: command[{TODO}]\n"
+		"GetMemoryInfo: command[reverb [handle!] memorybits [integer!] event_memorybits [integer!] ]\n"
 	"]\n"
 
 ;
@@ -807,6 +844,10 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			ERRCHECK(FMOD_System_CreateDSPByType(sys, FMOD_DSP_TYPE_PARAMEQ, &dspparameq));
 
 			return RXR_TRUE;
+		}
+		case CMD_FMOD_init_words: {
+            fmod_ext_words = RL_MAP_WORDS(RXA_SERIES(frm,1));
+            return RXR_UNSET;
 		}
 		case CMD_FMOD_GetLastError: {
 			RXA_INT64(frm, 1) = (int)lastError;
@@ -893,6 +934,56 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			ERRCHECK(result);
 			return RXR_TRUE;
 		}
+		case CMD_test_obj: {
+
+            FMOD_REVERB_PROPERTIES prop;
+            ERRCHECK(FMOD_System_GetReverbProperties(sys, &prop));
+            REBSER *obj=0;
+            RXIARG val;
+
+            RXV_INT64(val) = prop.Instance;
+            RL_SET_FIELD(obj,fmod_ext_words[W_Instance],val,RXT_INTEGER);
+
+
+
+			    //just testing.......
+			    /*
+            u32 *words, *w;
+            REBSER *obj;
+            REBCNT type;
+            RXIARG result;
+            obj = RXA_OBJECT(frm, 1);
+            words = RL_WORDS_OF_OBJECT(obj);
+            w = words;
+            while ((type = RL_GET_FIELD(obj, w[0], &result))) {
+                RL->print((REBYTE*)"word: %d %d\n", w[0], RL_FIND_WORD(fmod_ext_words,w[0]));
+                switch(RL_FIND_WORD(fmod_ext_words,w[0])){
+                    case W_Room: {
+                        RL->print((REBYTE*)"Room: %d\n",4);
+                        RXV_DEC64(result) = 3 * RXV_DEC64(result);
+                        RL_SET_FIELD(obj, w[0], result, RXT_DECIMAL );
+                        break;
+                    }
+                    case W_Reverb: {
+                        RL->print((REBYTE*)"Reverb: %d\n",RXV_DEC64(result));
+                        if (type == RXT_INTEGER) {
+                            RXV_DEC64(result) = (float)RXV_INT64(result);
+                            RL_SET_FIELD(obj, w[0], result, RXT_DECIMAL );
+                        }
+                        break;
+                    }
+                }
+                //RL->print((REBYTE*)"type:\n");
+                w++;
+            }
+
+            */
+          //  RL_GET_FIELD(obj, RL_FIND_WORD(fmod_ext_words, 2), &result);
+          //  RL->print((REBYTE*)"xxx: %d\n", RXV_INT64(result));
+            RXA_OBJECT(frm, 1) = obj;
+			RXA_TYPE(frm, 1) = RXT_OBJECT;
+			return RXR_VALUE;
+		}
 /* generated */
 		case CMD_FMOD_Memory_Initialize: {
 /* TODO: (void *poolmem, int poollen, FMOD_MEMORY_ALLOCCALLBACK useralloc, FMOD_MEMORY_REALLOCCALLBACK userrealloc, FMOD_MEMORY_FREECALLBACK userfree, FMOD_MEMORY_TYPE memtypeflags) */
@@ -903,8 +994,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			int currentalloced;
 			int maxalloced;
 			ERRCHECK(FMOD_Memory_GetStats(&currentalloced, &maxalloced, (FMOD_BOOL)RXA_LOGIC(frm, 1)));
-			REBSER* block = RL_MAKE_BLOCK(2);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
 			RXV_INT64(val) = currentalloced;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = maxalloced;
@@ -978,8 +1069,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			int maxfrequency;
 			FMOD_SPEAKERMODE controlpanelspeakermode;
 			ERRCHECK(FMOD_System_GetDriverCaps(sys, (int)RXA_INT32(frm, 1), &caps, &minfrequency, &maxfrequency, &controlpanelspeakermode));
-			REBSER* block = RL_MAKE_BLOCK(4);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(4);
 			RXV_INT64(val) = caps;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = minfrequency;
@@ -1040,8 +1131,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			FMOD_DSP_RESAMPLER resamplemethod;
 			int bits;
 			ERRCHECK(FMOD_System_GetSoftwareFormat(sys, &samplerate, &format, &numoutputchannels, &maxinputchannels, &resamplemethod, &bits));
-			REBSER* block = RL_MAKE_BLOCK(6);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(6);
 			RXV_INT64(val) = samplerate;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = format;
@@ -1198,8 +1289,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			unsigned int filebuffersize;
 			FMOD_TIMEUNIT filebuffersizetype;
 			ERRCHECK(FMOD_System_GetStreamBufferSize(sys, &filebuffersize, &filebuffersizetype));
-			REBSER* block = RL_MAKE_BLOCK(2);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
 			RXV_INT64(val) = filebuffersize;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = filebuffersizetype;
@@ -1239,8 +1330,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			int num3d;
 			int total;
 			ERRCHECK(FMOD_System_GetHardwareChannels(sys, &num2d, &num3d, &total));
-			REBSER* block = RL_MAKE_BLOCK(3);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(3);
 			RXV_INT64(val) = num2d;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = num3d;
@@ -1260,8 +1351,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			float update;
 			float total;
 			ERRCHECK(FMOD_System_GetCPUUsage(sys, &dsp, &stream, &geometry, &update, &total));
-			REBSER* block = RL_MAKE_BLOCK(5);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(5);
 			RXV_DEC64(val) = dsp;
 			RL_SET_VALUE(block, 0, val, RXT_DECIMAL);
 			RXV_DEC64(val) = stream;
@@ -1283,8 +1374,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			int maxalloced;
 			int total;
 			ERRCHECK(FMOD_System_GetSoundRAM(sys, &currentalloced, &maxalloced, &total));
-			REBSER* block = RL_MAKE_BLOCK(3);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(3);
 			RXV_INT64(val) = currentalloced;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = maxalloced;
@@ -1307,8 +1398,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 		case CMD_FMOD_System_GetCDROMDriveName: {
 /* SPEC: (FMOD_SYSTEM *system, int drive, char *drivename, int drivenamelen, char *scsiname, int scsinamelen, char *devicename, int devicenamelen) */
 			ERRCHECK(FMOD_System_GetCDROMDriveName(sys, (int)RXA_INT32(frm, 1), tmpBuffer1, 256, tmpBuffer2, 256, tmpBuffer3, 256));
-			REBSER* block = RL_MAKE_BLOCK(3);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(3);
 			RXV_SERIES(val) = StringToRebser(tmpBuffer1);
 			RL_SET_VALUE(block, 0, val, RXT_STRING);
 			RXV_SERIES(val) = StringToRebser(tmpBuffer2);
@@ -1322,19 +1413,41 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 		}
 		case CMD_FMOD_System_GetSpectrum: {
 /* SPEC: (FMOD_SYSTEM *system, float *spectrumarray, int numvalues, int channeloffset, FMOD_DSP_FFT_WINDOW windowtype) */
-			float spectrumarray;
+			int numvalues = (int)RXA_INT32(frm, 1);
+			int n;
+			float* spectrumarray;
+			spectrumarray=(float*)malloc(numvalues*sizeof(float));
 			FMOD_DSP_FFT_WINDOW windowtype = RXA_INT32(frm, 3);
-			ERRCHECK(FMOD_System_GetSpectrum(sys, &spectrumarray, (int)RXA_INT32(frm, 1), (int)RXA_INT32(frm, 2), windowtype));
-			RXA_DEC64(frm, 1) = spectrumarray;
-			RXA_TYPE(frm, 1) = RXT_DECIMAL;
+			ERRCHECK(FMOD_System_GetSpectrum(sys, spectrumarray, numvalues, (int)RXA_INT32(frm, 2), windowtype));
+			REBSER* block = RL_MAKE_BLOCK(numvalues);
+			RXIARG val;
+			for(n=0; n<numvalues;n++) {
+			    RXV_DECIMAL(val) = spectrumarray[n];
+			    RL_SET_VALUE(block, n, val, RXT_DECIMAL);
+			}
+			free(spectrumarray);
+			RXA_SERIES(frm, 1) = block;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_INDEX(frm, 1)  = 0;
 			return RXR_VALUE;
 		}
 		case CMD_FMOD_System_GetWaveData: {
 /* SPEC: (FMOD_SYSTEM *system, float *wavearray, int numvalues, int channeloffset) */
-			float wavearray;
-			ERRCHECK(FMOD_System_GetWaveData(sys, &wavearray, (int)RXA_INT32(frm, 1), (int)RXA_INT32(frm, 2)));
-			RXA_DEC64(frm, 1) = wavearray;
-			RXA_TYPE(frm, 1) = RXT_DECIMAL;
+			int numvalues = (int)RXA_INT32(frm, 1);
+			int n;
+			float* wavearray;
+			wavearray=(float*)malloc(numvalues*sizeof(float));
+			ERRCHECK(FMOD_System_GetWaveData(sys, wavearray, numvalues, (int)RXA_INT32(frm, 2)));
+			REBSER* block = RL_MAKE_BLOCK(numvalues);
+			RXIARG val;
+			for(n=0; n<numvalues;n++) {
+			    RXV_DECIMAL(val) = wavearray[n];
+			    RL_SET_VALUE(block, n, val, RXT_DECIMAL);
+			}
+			free(wavearray);
+			RXA_SERIES(frm, 1) = block;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_INDEX(frm, 1)  = 0;
 			return RXR_VALUE;
 		}
 		case CMD_FMOD_System_CreateSound: {
@@ -1492,8 +1605,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			int minfrequency;
 			int maxfrequency;
 			ERRCHECK(FMOD_System_GetRecordDriverCaps(sys, (int)RXA_INT32(frm, 1), &caps, &minfrequency, &maxfrequency));
-			REBSER* block = RL_MAKE_BLOCK(3);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(3);
 			RXV_INT64(val) = caps;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = minfrequency;
@@ -1586,8 +1699,118 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			return RXR_ERROR;
 		}
 		case CMD_FMOD_System_GetMemoryInfo: {
-/* TODO: (FMOD_SYSTEM *system, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
-			return RXR_ERROR;
+/* SPEC: (FMOD_SYSTEM *system, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
+			unsigned int memoryused;
+			FMOD_MEMORY_USAGE_DETAILS memoryused_details;
+			ERRCHECK(FMOD_System_GetMemoryInfo(sys, (unsigned int)RXA_INT32(frm, 1), (unsigned int)RXA_INT32(frm, 2), &memoryused, &memoryused_details));
+			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
+			RXV_INT64(val) = memoryused;
+			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
+			REBSER* blk_memoryused_details = RL_MAKE_BLOCK(48);
+			RXV_INT64(val) = memoryused_details.other;
+			RL_SET_VALUE(blk_memoryused_details, 0, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.string;
+			RL_SET_VALUE(blk_memoryused_details, 1, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.system;
+			RL_SET_VALUE(blk_memoryused_details, 2, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.plugins;
+			RL_SET_VALUE(blk_memoryused_details, 3, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.output;
+			RL_SET_VALUE(blk_memoryused_details, 4, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channel;
+			RL_SET_VALUE(blk_memoryused_details, 5, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channelgroup;
+			RL_SET_VALUE(blk_memoryused_details, 6, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.codec;
+			RL_SET_VALUE(blk_memoryused_details, 7, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.file;
+			RL_SET_VALUE(blk_memoryused_details, 8, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sound;
+			RL_SET_VALUE(blk_memoryused_details, 9, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.secondaryram;
+			RL_SET_VALUE(blk_memoryused_details, 10, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundgroup;
+			RL_SET_VALUE(blk_memoryused_details, 11, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streambuffer;
+			RL_SET_VALUE(blk_memoryused_details, 12, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspconnection;
+			RL_SET_VALUE(blk_memoryused_details, 13, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dsp;
+			RL_SET_VALUE(blk_memoryused_details, 14, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspcodec;
+			RL_SET_VALUE(blk_memoryused_details, 15, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.profile;
+			RL_SET_VALUE(blk_memoryused_details, 16, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.recordbuffer;
+			RL_SET_VALUE(blk_memoryused_details, 17, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverb;
+			RL_SET_VALUE(blk_memoryused_details, 18, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbchannelprops;
+			RL_SET_VALUE(blk_memoryused_details, 19, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.geometry;
+			RL_SET_VALUE(blk_memoryused_details, 20, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.syncpoint;
+			RL_SET_VALUE(blk_memoryused_details, 21, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventsystem;
+			RL_SET_VALUE(blk_memoryused_details, 22, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.musicsystem;
+			RL_SET_VALUE(blk_memoryused_details, 23, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.fev;
+			RL_SET_VALUE(blk_memoryused_details, 24, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.memoryfsb;
+			RL_SET_VALUE(blk_memoryused_details, 25, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventproject;
+			RL_SET_VALUE(blk_memoryused_details, 26, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventgroupi;
+			RL_SET_VALUE(blk_memoryused_details, 27, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbankclass;
+			RL_SET_VALUE(blk_memoryused_details, 28, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbanklist;
+			RL_SET_VALUE(blk_memoryused_details, 29, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streaminstance;
+			RL_SET_VALUE(blk_memoryused_details, 30, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefclass;
+			RL_SET_VALUE(blk_memoryused_details, 31, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefdefclass;
+			RL_SET_VALUE(blk_memoryused_details, 32, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefpool;
+			RL_SET_VALUE(blk_memoryused_details, 33, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbdef;
+			RL_SET_VALUE(blk_memoryused_details, 34, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventreverb;
+			RL_SET_VALUE(blk_memoryused_details, 35, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.userproperty;
+			RL_SET_VALUE(blk_memoryused_details, 36, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance;
+			RL_SET_VALUE(blk_memoryused_details, 37, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_complex;
+			RL_SET_VALUE(blk_memoryused_details, 38, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_simple;
+			RL_SET_VALUE(blk_memoryused_details, 39, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_layer;
+			RL_SET_VALUE(blk_memoryused_details, 40, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_sound;
+			RL_SET_VALUE(blk_memoryused_details, 41, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelope;
+			RL_SET_VALUE(blk_memoryused_details, 42, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopedef;
+			RL_SET_VALUE(blk_memoryused_details, 43, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventparameter;
+			RL_SET_VALUE(blk_memoryused_details, 44, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventcategory;
+			RL_SET_VALUE(blk_memoryused_details, 45, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopepoint;
+			RL_SET_VALUE(blk_memoryused_details, 46, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstancepool;
+			RL_SET_VALUE(blk_memoryused_details, 47, val, RXT_INTEGER);
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = blk_memoryused_details;
+			RXA_INDEX(frm, 1)  = 0;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = block;
+			RXA_INDEX(frm, 1)  = 0;
+			return RXR_VALUE;
 		}
 		case CMD_FMOD_Sound_Release: {
 /* SPEC: (FMOD_SOUND *sound) */
@@ -1609,8 +1832,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			unsigned int len1;
 			unsigned int len2;
 			ERRCHECK(FMOD_Sound_Lock((FMOD_SOUND*)RXA_HANDLE(frm, 1), (unsigned int)RXA_INT32(frm, 2), (unsigned int)RXA_INT32(frm, 3), &ptr1, &ptr2, &len1, &len2));
-			REBSER* block = RL_MAKE_BLOCK(4);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(4);
 			RXV_HANDLE(val) = ptr1;
 			RL_SET_VALUE(block, 0, val, RXT_HANDLE);
 			RXV_HANDLE(val) = ptr2;
@@ -1641,8 +1864,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			float pan;
 			int priority;
 			ERRCHECK(FMOD_Sound_GetDefaults((FMOD_SOUND*)RXA_HANDLE(frm, 1), &frequency, &volume, &pan, &priority));
-			REBSER* block = RL_MAKE_BLOCK(4);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(4);
 			RXV_DEC64(val) = frequency;
 			RL_SET_VALUE(block, 0, val, RXT_DECIMAL);
 			RXV_DEC64(val) = volume;
@@ -1667,8 +1890,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			float volumevar;
 			float panvar;
 			ERRCHECK(FMOD_Sound_GetVariations((FMOD_SOUND*)RXA_HANDLE(frm, 1), &frequencyvar, &volumevar, &panvar));
-			REBSER* block = RL_MAKE_BLOCK(3);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(3);
 			RXV_DEC64(val) = frequencyvar;
 			RL_SET_VALUE(block, 0, val, RXT_DECIMAL);
 			RXV_DEC64(val) = volumevar;
@@ -1748,8 +1971,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			int channels;
 			int bits;
 			ERRCHECK(FMOD_Sound_GetFormat((FMOD_SOUND*)RXA_HANDLE(frm, 1), &type, &format, &channels, &bits));
-			REBSER* block = RL_MAKE_BLOCK(4);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(4);
 			RXV_INT64(val) = type;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = format;
@@ -1776,8 +1999,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			int numtags;
 			int numtagsupdated;
 			ERRCHECK(FMOD_Sound_GetNumTags((FMOD_SOUND*)RXA_HANDLE(frm, 1), &numtags, &numtagsupdated));
-			REBSER* block = RL_MAKE_BLOCK(2);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
 			RXV_INT64(val) = numtags;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = numtagsupdated;
@@ -1817,8 +2040,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			unsigned int percentbuffered;
 			FMOD_BOOL starving;
 			ERRCHECK(FMOD_Sound_GetOpenState((FMOD_SOUND*)RXA_HANDLE(frm, 1), &openstate, &percentbuffered, &starving));
-			REBSER* block = RL_MAKE_BLOCK(3);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(3);
 			RXV_INT64(val) = openstate;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = percentbuffered;
@@ -1877,8 +2100,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			unsigned int offset;
 			FMOD_TIMEUNIT offsettype = RXA_INT32(frm, 3);
 			ERRCHECK(FMOD_Sound_GetSyncPointInfo((FMOD_SOUND*)RXA_HANDLE(frm, 1), (FMOD_SYNCPOINT*)RXA_HANDLE(frm, 2), tmpBuffer1, 256, &offset, offsettype));
-			REBSER* block = RL_MAKE_BLOCK(2);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
 			RXV_SERIES(val) = StringToRebser(tmpBuffer1);
 			RL_SET_VALUE(block, 0, val, RXT_STRING);
 			RXV_INT64(val) = offset;
@@ -1944,8 +2167,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			unsigned int loopend;
 			FMOD_TIMEUNIT loopendtype = RXA_INT32(frm, 3);
 			ERRCHECK(FMOD_Sound_GetLoopPoints((FMOD_SOUND*)RXA_HANDLE(frm, 1), &loopstart, loopstarttype, &loopend, loopendtype));
-			REBSER* block = RL_MAKE_BLOCK(2);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
 			RXV_INT64(val) = loopstart;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = loopend;
@@ -1998,8 +2221,118 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			return RXR_ERROR;
 		}
 		case CMD_FMOD_Sound_GetMemoryInfo: {
-/* TODO: (FMOD_SOUND *sound, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
-			return RXR_ERROR;
+/* SPEC: (FMOD_SOUND *sound, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
+			unsigned int memoryused;
+			FMOD_MEMORY_USAGE_DETAILS memoryused_details;
+			ERRCHECK(FMOD_Sound_GetMemoryInfo((FMOD_SOUND*)RXA_HANDLE(frm, 1), (unsigned int)RXA_INT32(frm, 2), (unsigned int)RXA_INT32(frm, 3), &memoryused, &memoryused_details));
+			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
+			RXV_INT64(val) = memoryused;
+			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
+			REBSER* blk_memoryused_details = RL_MAKE_BLOCK(48);
+			RXV_INT64(val) = memoryused_details.other;
+			RL_SET_VALUE(blk_memoryused_details, 0, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.string;
+			RL_SET_VALUE(blk_memoryused_details, 1, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.system;
+			RL_SET_VALUE(blk_memoryused_details, 2, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.plugins;
+			RL_SET_VALUE(blk_memoryused_details, 3, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.output;
+			RL_SET_VALUE(blk_memoryused_details, 4, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channel;
+			RL_SET_VALUE(blk_memoryused_details, 5, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channelgroup;
+			RL_SET_VALUE(blk_memoryused_details, 6, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.codec;
+			RL_SET_VALUE(blk_memoryused_details, 7, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.file;
+			RL_SET_VALUE(blk_memoryused_details, 8, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sound;
+			RL_SET_VALUE(blk_memoryused_details, 9, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.secondaryram;
+			RL_SET_VALUE(blk_memoryused_details, 10, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundgroup;
+			RL_SET_VALUE(blk_memoryused_details, 11, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streambuffer;
+			RL_SET_VALUE(blk_memoryused_details, 12, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspconnection;
+			RL_SET_VALUE(blk_memoryused_details, 13, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dsp;
+			RL_SET_VALUE(blk_memoryused_details, 14, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspcodec;
+			RL_SET_VALUE(blk_memoryused_details, 15, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.profile;
+			RL_SET_VALUE(blk_memoryused_details, 16, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.recordbuffer;
+			RL_SET_VALUE(blk_memoryused_details, 17, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverb;
+			RL_SET_VALUE(blk_memoryused_details, 18, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbchannelprops;
+			RL_SET_VALUE(blk_memoryused_details, 19, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.geometry;
+			RL_SET_VALUE(blk_memoryused_details, 20, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.syncpoint;
+			RL_SET_VALUE(blk_memoryused_details, 21, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventsystem;
+			RL_SET_VALUE(blk_memoryused_details, 22, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.musicsystem;
+			RL_SET_VALUE(blk_memoryused_details, 23, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.fev;
+			RL_SET_VALUE(blk_memoryused_details, 24, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.memoryfsb;
+			RL_SET_VALUE(blk_memoryused_details, 25, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventproject;
+			RL_SET_VALUE(blk_memoryused_details, 26, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventgroupi;
+			RL_SET_VALUE(blk_memoryused_details, 27, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbankclass;
+			RL_SET_VALUE(blk_memoryused_details, 28, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbanklist;
+			RL_SET_VALUE(blk_memoryused_details, 29, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streaminstance;
+			RL_SET_VALUE(blk_memoryused_details, 30, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefclass;
+			RL_SET_VALUE(blk_memoryused_details, 31, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefdefclass;
+			RL_SET_VALUE(blk_memoryused_details, 32, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefpool;
+			RL_SET_VALUE(blk_memoryused_details, 33, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbdef;
+			RL_SET_VALUE(blk_memoryused_details, 34, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventreverb;
+			RL_SET_VALUE(blk_memoryused_details, 35, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.userproperty;
+			RL_SET_VALUE(blk_memoryused_details, 36, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance;
+			RL_SET_VALUE(blk_memoryused_details, 37, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_complex;
+			RL_SET_VALUE(blk_memoryused_details, 38, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_simple;
+			RL_SET_VALUE(blk_memoryused_details, 39, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_layer;
+			RL_SET_VALUE(blk_memoryused_details, 40, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_sound;
+			RL_SET_VALUE(blk_memoryused_details, 41, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelope;
+			RL_SET_VALUE(blk_memoryused_details, 42, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopedef;
+			RL_SET_VALUE(blk_memoryused_details, 43, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventparameter;
+			RL_SET_VALUE(blk_memoryused_details, 44, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventcategory;
+			RL_SET_VALUE(blk_memoryused_details, 45, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopepoint;
+			RL_SET_VALUE(blk_memoryused_details, 46, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstancepool;
+			RL_SET_VALUE(blk_memoryused_details, 47, val, RXT_INTEGER);
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = blk_memoryused_details;
+			RXA_INDEX(frm, 1)  = 0;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = block;
+			RXA_INDEX(frm, 1)  = 0;
+			return RXR_VALUE;
 		}
 		case CMD_FMOD_Channel_GetSystemObject: {
 /* SPEC: (FMOD_CHANNEL *channel, FMOD_SYSTEM **system) */
@@ -2078,8 +2411,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			unsigned int delayhi;
 			unsigned int delaylo;
 			ERRCHECK(FMOD_Channel_GetDelay((FMOD_CHANNEL*)RXA_HANDLE(frm, 1), delaytype, &delayhi, &delaylo));
-			REBSER* block = RL_MAKE_BLOCK(2);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
 			RXV_INT64(val) = delayhi;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = delaylo;
@@ -2089,8 +2422,10 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			RXA_INDEX(frm, 1)  = 0;
 			return RXR_VALUE;
 		}
+
 		case CMD_FMOD_Channel_SetSpeakerMix: {
-/* SPEC: (FMOD_CHANNEL *channel, float frontleft, float frontright, float center, float lfe, float backleft, float backright, float sideleft, float sideright) */			RXIARG val;
+/* SPEC: (FMOD_CHANNEL *channel, float frontleft, float frontright, float center, float lfe, float backleft, float backright, float sideleft, float sideright) */
+			RXIARG val;
 			RL_GET_VALUE(RXA_SERIES(frm, 2),0,&val);
 			float frontleft = RXV_DEC64(val);
 			RL_GET_VALUE(RXA_SERIES(frm, 2),1,&val);
@@ -2108,7 +2443,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			RL_GET_VALUE(RXA_SERIES(frm, 2),7,&val);
 			float sideright = RXV_DEC64(val);
 			ERRCHECK(FMOD_Channel_SetSpeakerMix((FMOD_CHANNEL*)RXA_HANDLE(frm, 1), frontleft, frontright, center, lfe, backleft, backright, sideleft, sideright));
-			return RXR_TRUE;		}
+			return RXR_TRUE;
+		}
 		case CMD_FMOD_Channel_GetSpeakerMix: {
 /* SPEC: (FMOD_CHANNEL *channel, float *frontleft, float *frontright, float *center, float *lfe, float *backleft, float *backright, float *sideleft, float *sideright) */
 			float frontleft;
@@ -2120,8 +2456,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			float sideleft;
 			float sideright;
 			ERRCHECK(FMOD_Channel_GetSpeakerMix((FMOD_CHANNEL*)RXA_HANDLE(frm, 1), &frontleft, &frontright, &center, &lfe, &backleft, &backright, &sideleft, &sideright));
-			REBSER* block = RL_MAKE_BLOCK(8);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(8);
 			RXV_DEC64(val) = frontleft;
 			RL_SET_VALUE(block, 0, val, RXT_DECIMAL);
 			RXV_DEC64(val) = frontright;
@@ -2370,19 +2706,41 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 		}
 		case CMD_FMOD_Channel_GetSpectrum: {
 /* SPEC: (FMOD_CHANNEL *channel, float *spectrumarray, int numvalues, int channeloffset, FMOD_DSP_FFT_WINDOW windowtype) */
-			float spectrumarray;
+			int numvalues = (int)RXA_INT32(frm, 2);
+			int n;
+			float* spectrumarray;
+			spectrumarray=(float*)malloc(numvalues*sizeof(float));
 			FMOD_DSP_FFT_WINDOW windowtype = RXA_INT32(frm, 4);
-			ERRCHECK(FMOD_Channel_GetSpectrum((FMOD_CHANNEL*)RXA_HANDLE(frm, 1), &spectrumarray, (int)RXA_INT32(frm, 2), (int)RXA_INT32(frm, 3), windowtype));
-			RXA_DEC64(frm, 1) = spectrumarray;
-			RXA_TYPE(frm, 1) = RXT_DECIMAL;
+			ERRCHECK(FMOD_Channel_GetSpectrum((FMOD_CHANNEL*)RXA_HANDLE(frm, 1), spectrumarray, numvalues, (int)RXA_INT32(frm, 3), windowtype));
+			REBSER* block = RL_MAKE_BLOCK(numvalues);
+			RXIARG val;
+			for(n=0; n<numvalues;n++) {
+			    RXV_DECIMAL(val) = spectrumarray[n];
+			    RL_SET_VALUE(block, n, val, RXT_DECIMAL);
+			}
+			free(spectrumarray);
+			RXA_SERIES(frm, 1) = block;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_INDEX(frm, 1)  = 0;
 			return RXR_VALUE;
 		}
 		case CMD_FMOD_Channel_GetWaveData: {
 /* SPEC: (FMOD_CHANNEL *channel, float *wavearray, int numvalues, int channeloffset) */
-			float wavearray;
-			ERRCHECK(FMOD_Channel_GetWaveData((FMOD_CHANNEL*)RXA_HANDLE(frm, 1), &wavearray, (int)RXA_INT32(frm, 2), (int)RXA_INT32(frm, 3)));
-			RXA_DEC64(frm, 1) = wavearray;
-			RXA_TYPE(frm, 1) = RXT_DECIMAL;
+			int numvalues = (int)RXA_INT32(frm, 2);
+			int n;
+			float* wavearray;
+			wavearray=(float*)malloc(numvalues*sizeof(float));
+			ERRCHECK(FMOD_Channel_GetWaveData((FMOD_CHANNEL*)RXA_HANDLE(frm, 1), wavearray, numvalues, (int)RXA_INT32(frm, 3)));
+			REBSER* block = RL_MAKE_BLOCK(numvalues);
+			RXIARG val;
+			for(n=0; n<numvalues;n++) {
+			    RXV_DECIMAL(val) = wavearray[n];
+			    RL_SET_VALUE(block, n, val, RXT_DECIMAL);
+			}
+			free(wavearray);
+			RXA_SERIES(frm, 1) = block;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_INDEX(frm, 1)  = 0;
 			return RXR_VALUE;
 		}
 		case CMD_FMOD_Channel_GetIndex: {
@@ -2434,8 +2792,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			unsigned int loopend;
 			FMOD_TIMEUNIT loopendtype = RXA_INT32(frm, 3);
 			ERRCHECK(FMOD_Channel_GetLoopPoints((FMOD_CHANNEL*)RXA_HANDLE(frm, 1), &loopstart, loopstarttype, &loopend, loopendtype));
-			REBSER* block = RL_MAKE_BLOCK(2);
 			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
 			RXV_INT64(val) = loopstart;
 			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
 			RXV_INT64(val) = loopend;
@@ -2454,8 +2812,118 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			return RXR_ERROR;
 		}
 		case CMD_FMOD_Channel_GetMemoryInfo: {
-/* TODO: (FMOD_CHANNEL *channel, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
-			return RXR_ERROR;
+/* SPEC: (FMOD_CHANNEL *channel, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
+			unsigned int memoryused;
+			FMOD_MEMORY_USAGE_DETAILS memoryused_details;
+			ERRCHECK(FMOD_Channel_GetMemoryInfo((FMOD_CHANNEL*)RXA_HANDLE(frm, 1), (unsigned int)RXA_INT32(frm, 2), (unsigned int)RXA_INT32(frm, 3), &memoryused, &memoryused_details));
+			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
+			RXV_INT64(val) = memoryused;
+			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
+			REBSER* blk_memoryused_details = RL_MAKE_BLOCK(48);
+			RXV_INT64(val) = memoryused_details.other;
+			RL_SET_VALUE(blk_memoryused_details, 0, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.string;
+			RL_SET_VALUE(blk_memoryused_details, 1, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.system;
+			RL_SET_VALUE(blk_memoryused_details, 2, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.plugins;
+			RL_SET_VALUE(blk_memoryused_details, 3, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.output;
+			RL_SET_VALUE(blk_memoryused_details, 4, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channel;
+			RL_SET_VALUE(blk_memoryused_details, 5, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channelgroup;
+			RL_SET_VALUE(blk_memoryused_details, 6, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.codec;
+			RL_SET_VALUE(blk_memoryused_details, 7, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.file;
+			RL_SET_VALUE(blk_memoryused_details, 8, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sound;
+			RL_SET_VALUE(blk_memoryused_details, 9, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.secondaryram;
+			RL_SET_VALUE(blk_memoryused_details, 10, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundgroup;
+			RL_SET_VALUE(blk_memoryused_details, 11, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streambuffer;
+			RL_SET_VALUE(blk_memoryused_details, 12, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspconnection;
+			RL_SET_VALUE(blk_memoryused_details, 13, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dsp;
+			RL_SET_VALUE(blk_memoryused_details, 14, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspcodec;
+			RL_SET_VALUE(blk_memoryused_details, 15, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.profile;
+			RL_SET_VALUE(blk_memoryused_details, 16, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.recordbuffer;
+			RL_SET_VALUE(blk_memoryused_details, 17, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverb;
+			RL_SET_VALUE(blk_memoryused_details, 18, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbchannelprops;
+			RL_SET_VALUE(blk_memoryused_details, 19, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.geometry;
+			RL_SET_VALUE(blk_memoryused_details, 20, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.syncpoint;
+			RL_SET_VALUE(blk_memoryused_details, 21, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventsystem;
+			RL_SET_VALUE(blk_memoryused_details, 22, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.musicsystem;
+			RL_SET_VALUE(blk_memoryused_details, 23, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.fev;
+			RL_SET_VALUE(blk_memoryused_details, 24, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.memoryfsb;
+			RL_SET_VALUE(blk_memoryused_details, 25, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventproject;
+			RL_SET_VALUE(blk_memoryused_details, 26, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventgroupi;
+			RL_SET_VALUE(blk_memoryused_details, 27, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbankclass;
+			RL_SET_VALUE(blk_memoryused_details, 28, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbanklist;
+			RL_SET_VALUE(blk_memoryused_details, 29, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streaminstance;
+			RL_SET_VALUE(blk_memoryused_details, 30, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefclass;
+			RL_SET_VALUE(blk_memoryused_details, 31, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefdefclass;
+			RL_SET_VALUE(blk_memoryused_details, 32, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefpool;
+			RL_SET_VALUE(blk_memoryused_details, 33, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbdef;
+			RL_SET_VALUE(blk_memoryused_details, 34, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventreverb;
+			RL_SET_VALUE(blk_memoryused_details, 35, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.userproperty;
+			RL_SET_VALUE(blk_memoryused_details, 36, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance;
+			RL_SET_VALUE(blk_memoryused_details, 37, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_complex;
+			RL_SET_VALUE(blk_memoryused_details, 38, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_simple;
+			RL_SET_VALUE(blk_memoryused_details, 39, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_layer;
+			RL_SET_VALUE(blk_memoryused_details, 40, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_sound;
+			RL_SET_VALUE(blk_memoryused_details, 41, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelope;
+			RL_SET_VALUE(blk_memoryused_details, 42, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopedef;
+			RL_SET_VALUE(blk_memoryused_details, 43, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventparameter;
+			RL_SET_VALUE(blk_memoryused_details, 44, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventcategory;
+			RL_SET_VALUE(blk_memoryused_details, 45, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopepoint;
+			RL_SET_VALUE(blk_memoryused_details, 46, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstancepool;
+			RL_SET_VALUE(blk_memoryused_details, 47, val, RXT_INTEGER);
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = blk_memoryused_details;
+			RXA_INDEX(frm, 1)  = 0;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = block;
+			RXA_INDEX(frm, 1)  = 0;
+			return RXR_VALUE;
 		}
 		case CMD_FMOD_ChannelGroup_Release: {
 /* SPEC: (FMOD_CHANNELGROUP *channelgroup) */
@@ -2558,7 +3026,8 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 /* TODO: (FMOD_CHANNELGROUP *channelgroup, const FMOD_VECTOR *pos, const FMOD_VECTOR *vel) */
 			return RXR_ERROR;
 		}
-        case CMD_FMOD_ChannelGroup_OverrideSpeakerMix: {
+
+		case CMD_FMOD_ChannelGroup_OverrideSpeakerMix: {
 /* SPEC: (FMOD_CHANNELGROUP *channelgroup, float frontleft, float frontright, float center, float lfe, float backleft, float backright, float sideleft, float sideright) */
 			RXIARG val;
 			RL_GET_VALUE(RXA_SERIES(frm, 2),0,&val);
@@ -2642,19 +3111,41 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 		}
 		case CMD_FMOD_ChannelGroup_GetSpectrum: {
 /* SPEC: (FMOD_CHANNELGROUP *channelgroup, float *spectrumarray, int numvalues, int channeloffset, FMOD_DSP_FFT_WINDOW windowtype) */
-			float spectrumarray;
+			int numvalues = (int)RXA_INT32(frm, 2);
+			int n;
+			float* spectrumarray;
+			spectrumarray=(float*)malloc(numvalues*sizeof(float));
 			FMOD_DSP_FFT_WINDOW windowtype = RXA_INT32(frm, 4);
-			ERRCHECK(FMOD_ChannelGroup_GetSpectrum((FMOD_CHANNELGROUP*)RXA_HANDLE(frm, 1), &spectrumarray, (int)RXA_INT32(frm, 2), (int)RXA_INT32(frm, 3), windowtype));
-			RXA_DEC64(frm, 1) = spectrumarray;
-			RXA_TYPE(frm, 1) = RXT_DECIMAL;
+			ERRCHECK(FMOD_ChannelGroup_GetSpectrum((FMOD_CHANNELGROUP*)RXA_HANDLE(frm, 1), spectrumarray, numvalues, (int)RXA_INT32(frm, 3), windowtype));
+			REBSER* block = RL_MAKE_BLOCK(numvalues);
+			RXIARG val;
+			for(n=0; n<numvalues;n++) {
+			    RXV_DECIMAL(val) = spectrumarray[n];
+			    RL_SET_VALUE(block, n, val, RXT_DECIMAL);
+			}
+			free(spectrumarray);
+			RXA_SERIES(frm, 1) = block;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_INDEX(frm, 1)  = 0;
 			return RXR_VALUE;
 		}
 		case CMD_FMOD_ChannelGroup_GetWaveData: {
 /* SPEC: (FMOD_CHANNELGROUP *channelgroup, float *wavearray, int numvalues, int channeloffset) */
-			float wavearray;
-			ERRCHECK(FMOD_ChannelGroup_GetWaveData((FMOD_CHANNELGROUP*)RXA_HANDLE(frm, 1), &wavearray, (int)RXA_INT32(frm, 2), (int)RXA_INT32(frm, 3)));
-			RXA_DEC64(frm, 1) = wavearray;
-			RXA_TYPE(frm, 1) = RXT_DECIMAL;
+			int numvalues = (int)RXA_INT32(frm, 2);
+			int n;
+			float* wavearray;
+			wavearray=(float*)malloc(numvalues*sizeof(float));
+			ERRCHECK(FMOD_ChannelGroup_GetWaveData((FMOD_CHANNELGROUP*)RXA_HANDLE(frm, 1), wavearray, numvalues, (int)RXA_INT32(frm, 3)));
+			REBSER* block = RL_MAKE_BLOCK(numvalues);
+			RXIARG val;
+			for(n=0; n<numvalues;n++) {
+			    RXV_DECIMAL(val) = wavearray[n];
+			    RL_SET_VALUE(block, n, val, RXT_DECIMAL);
+			}
+			free(wavearray);
+			RXA_SERIES(frm, 1) = block;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_INDEX(frm, 1)  = 0;
 			return RXR_VALUE;
 		}
 		case CMD_FMOD_ChannelGroup_SetUserData: {
@@ -2666,8 +3157,118 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			return RXR_ERROR;
 		}
 		case CMD_FMOD_ChannelGroup_GetMemoryInfo: {
-/* TODO: (FMOD_CHANNELGROUP *channelgroup, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
-			return RXR_ERROR;
+/* SPEC: (FMOD_CHANNELGROUP *channelgroup, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
+			unsigned int memoryused;
+			FMOD_MEMORY_USAGE_DETAILS memoryused_details;
+			ERRCHECK(FMOD_ChannelGroup_GetMemoryInfo((FMOD_CHANNELGROUP*)RXA_HANDLE(frm, 1), (unsigned int)RXA_INT32(frm, 2), (unsigned int)RXA_INT32(frm, 3), &memoryused, &memoryused_details));
+			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
+			RXV_INT64(val) = memoryused;
+			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
+			REBSER* blk_memoryused_details = RL_MAKE_BLOCK(48);
+			RXV_INT64(val) = memoryused_details.other;
+			RL_SET_VALUE(blk_memoryused_details, 0, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.string;
+			RL_SET_VALUE(blk_memoryused_details, 1, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.system;
+			RL_SET_VALUE(blk_memoryused_details, 2, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.plugins;
+			RL_SET_VALUE(blk_memoryused_details, 3, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.output;
+			RL_SET_VALUE(blk_memoryused_details, 4, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channel;
+			RL_SET_VALUE(blk_memoryused_details, 5, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channelgroup;
+			RL_SET_VALUE(blk_memoryused_details, 6, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.codec;
+			RL_SET_VALUE(blk_memoryused_details, 7, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.file;
+			RL_SET_VALUE(blk_memoryused_details, 8, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sound;
+			RL_SET_VALUE(blk_memoryused_details, 9, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.secondaryram;
+			RL_SET_VALUE(blk_memoryused_details, 10, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundgroup;
+			RL_SET_VALUE(blk_memoryused_details, 11, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streambuffer;
+			RL_SET_VALUE(blk_memoryused_details, 12, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspconnection;
+			RL_SET_VALUE(blk_memoryused_details, 13, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dsp;
+			RL_SET_VALUE(blk_memoryused_details, 14, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspcodec;
+			RL_SET_VALUE(blk_memoryused_details, 15, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.profile;
+			RL_SET_VALUE(blk_memoryused_details, 16, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.recordbuffer;
+			RL_SET_VALUE(blk_memoryused_details, 17, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverb;
+			RL_SET_VALUE(blk_memoryused_details, 18, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbchannelprops;
+			RL_SET_VALUE(blk_memoryused_details, 19, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.geometry;
+			RL_SET_VALUE(blk_memoryused_details, 20, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.syncpoint;
+			RL_SET_VALUE(blk_memoryused_details, 21, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventsystem;
+			RL_SET_VALUE(blk_memoryused_details, 22, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.musicsystem;
+			RL_SET_VALUE(blk_memoryused_details, 23, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.fev;
+			RL_SET_VALUE(blk_memoryused_details, 24, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.memoryfsb;
+			RL_SET_VALUE(blk_memoryused_details, 25, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventproject;
+			RL_SET_VALUE(blk_memoryused_details, 26, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventgroupi;
+			RL_SET_VALUE(blk_memoryused_details, 27, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbankclass;
+			RL_SET_VALUE(blk_memoryused_details, 28, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbanklist;
+			RL_SET_VALUE(blk_memoryused_details, 29, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streaminstance;
+			RL_SET_VALUE(blk_memoryused_details, 30, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefclass;
+			RL_SET_VALUE(blk_memoryused_details, 31, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefdefclass;
+			RL_SET_VALUE(blk_memoryused_details, 32, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefpool;
+			RL_SET_VALUE(blk_memoryused_details, 33, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbdef;
+			RL_SET_VALUE(blk_memoryused_details, 34, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventreverb;
+			RL_SET_VALUE(blk_memoryused_details, 35, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.userproperty;
+			RL_SET_VALUE(blk_memoryused_details, 36, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance;
+			RL_SET_VALUE(blk_memoryused_details, 37, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_complex;
+			RL_SET_VALUE(blk_memoryused_details, 38, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_simple;
+			RL_SET_VALUE(blk_memoryused_details, 39, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_layer;
+			RL_SET_VALUE(blk_memoryused_details, 40, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_sound;
+			RL_SET_VALUE(blk_memoryused_details, 41, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelope;
+			RL_SET_VALUE(blk_memoryused_details, 42, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopedef;
+			RL_SET_VALUE(blk_memoryused_details, 43, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventparameter;
+			RL_SET_VALUE(blk_memoryused_details, 44, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventcategory;
+			RL_SET_VALUE(blk_memoryused_details, 45, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopepoint;
+			RL_SET_VALUE(blk_memoryused_details, 46, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstancepool;
+			RL_SET_VALUE(blk_memoryused_details, 47, val, RXT_INTEGER);
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = blk_memoryused_details;
+			RXA_INDEX(frm, 1)  = 0;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = block;
+			RXA_INDEX(frm, 1)  = 0;
+			return RXR_VALUE;
 		}
 		case CMD_FMOD_SoundGroup_Release: {
 /* SPEC: (FMOD_SOUNDGROUP *soundgroup) */
@@ -2780,8 +3381,118 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			return RXR_ERROR;
 		}
 		case CMD_FMOD_SoundGroup_GetMemoryInfo: {
-/* TODO: (FMOD_SOUNDGROUP *soundgroup, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
-			return RXR_ERROR;
+/* SPEC: (FMOD_SOUNDGROUP *soundgroup, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
+			unsigned int memoryused;
+			FMOD_MEMORY_USAGE_DETAILS memoryused_details;
+			ERRCHECK(FMOD_SoundGroup_GetMemoryInfo((FMOD_SOUNDGROUP*)RXA_HANDLE(frm, 1), (unsigned int)RXA_INT32(frm, 2), (unsigned int)RXA_INT32(frm, 3), &memoryused, &memoryused_details));
+			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
+			RXV_INT64(val) = memoryused;
+			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
+			REBSER* blk_memoryused_details = RL_MAKE_BLOCK(48);
+			RXV_INT64(val) = memoryused_details.other;
+			RL_SET_VALUE(blk_memoryused_details, 0, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.string;
+			RL_SET_VALUE(blk_memoryused_details, 1, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.system;
+			RL_SET_VALUE(blk_memoryused_details, 2, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.plugins;
+			RL_SET_VALUE(blk_memoryused_details, 3, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.output;
+			RL_SET_VALUE(blk_memoryused_details, 4, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channel;
+			RL_SET_VALUE(blk_memoryused_details, 5, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channelgroup;
+			RL_SET_VALUE(blk_memoryused_details, 6, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.codec;
+			RL_SET_VALUE(blk_memoryused_details, 7, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.file;
+			RL_SET_VALUE(blk_memoryused_details, 8, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sound;
+			RL_SET_VALUE(blk_memoryused_details, 9, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.secondaryram;
+			RL_SET_VALUE(blk_memoryused_details, 10, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundgroup;
+			RL_SET_VALUE(blk_memoryused_details, 11, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streambuffer;
+			RL_SET_VALUE(blk_memoryused_details, 12, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspconnection;
+			RL_SET_VALUE(blk_memoryused_details, 13, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dsp;
+			RL_SET_VALUE(blk_memoryused_details, 14, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspcodec;
+			RL_SET_VALUE(blk_memoryused_details, 15, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.profile;
+			RL_SET_VALUE(blk_memoryused_details, 16, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.recordbuffer;
+			RL_SET_VALUE(blk_memoryused_details, 17, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverb;
+			RL_SET_VALUE(blk_memoryused_details, 18, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbchannelprops;
+			RL_SET_VALUE(blk_memoryused_details, 19, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.geometry;
+			RL_SET_VALUE(blk_memoryused_details, 20, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.syncpoint;
+			RL_SET_VALUE(blk_memoryused_details, 21, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventsystem;
+			RL_SET_VALUE(blk_memoryused_details, 22, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.musicsystem;
+			RL_SET_VALUE(blk_memoryused_details, 23, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.fev;
+			RL_SET_VALUE(blk_memoryused_details, 24, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.memoryfsb;
+			RL_SET_VALUE(blk_memoryused_details, 25, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventproject;
+			RL_SET_VALUE(blk_memoryused_details, 26, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventgroupi;
+			RL_SET_VALUE(blk_memoryused_details, 27, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbankclass;
+			RL_SET_VALUE(blk_memoryused_details, 28, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbanklist;
+			RL_SET_VALUE(blk_memoryused_details, 29, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streaminstance;
+			RL_SET_VALUE(blk_memoryused_details, 30, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefclass;
+			RL_SET_VALUE(blk_memoryused_details, 31, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefdefclass;
+			RL_SET_VALUE(blk_memoryused_details, 32, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefpool;
+			RL_SET_VALUE(blk_memoryused_details, 33, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbdef;
+			RL_SET_VALUE(blk_memoryused_details, 34, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventreverb;
+			RL_SET_VALUE(blk_memoryused_details, 35, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.userproperty;
+			RL_SET_VALUE(blk_memoryused_details, 36, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance;
+			RL_SET_VALUE(blk_memoryused_details, 37, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_complex;
+			RL_SET_VALUE(blk_memoryused_details, 38, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_simple;
+			RL_SET_VALUE(blk_memoryused_details, 39, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_layer;
+			RL_SET_VALUE(blk_memoryused_details, 40, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_sound;
+			RL_SET_VALUE(blk_memoryused_details, 41, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelope;
+			RL_SET_VALUE(blk_memoryused_details, 42, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopedef;
+			RL_SET_VALUE(blk_memoryused_details, 43, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventparameter;
+			RL_SET_VALUE(blk_memoryused_details, 44, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventcategory;
+			RL_SET_VALUE(blk_memoryused_details, 45, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopepoint;
+			RL_SET_VALUE(blk_memoryused_details, 46, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstancepool;
+			RL_SET_VALUE(blk_memoryused_details, 47, val, RXT_INTEGER);
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = blk_memoryused_details;
+			RXA_INDEX(frm, 1)  = 0;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = block;
+			RXA_INDEX(frm, 1)  = 0;
+			return RXR_VALUE;
 		}
 		case CMD_FMOD_DSP_Release: {
 /* TODO: (FMOD_DSP *dsp) */
@@ -3062,8 +3773,118 @@ int RX_Call(int cmd, RXIFRM *frm, void *data) {
 			return RXR_ERROR;
 		}
 		case CMD_FMOD_Reverb_GetMemoryInfo: {
-/* TODO: (FMOD_REVERB *reverb, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
-			return RXR_ERROR;
+/* SPEC: (FMOD_REVERB *reverb, unsigned int memorybits, unsigned int event_memorybits, unsigned int *memoryused, FMOD_MEMORY_USAGE_DETAILS *memoryused_details) */
+			unsigned int memoryused;
+			FMOD_MEMORY_USAGE_DETAILS memoryused_details;
+			ERRCHECK(FMOD_Reverb_GetMemoryInfo((FMOD_REVERB*)RXA_HANDLE(frm, 1), (unsigned int)RXA_INT32(frm, 2), (unsigned int)RXA_INT32(frm, 3), &memoryused, &memoryused_details));
+			RXIARG val;
+			REBSER* block = RL_MAKE_BLOCK(2);
+			RXV_INT64(val) = memoryused;
+			RL_SET_VALUE(block, 0, val, RXT_INTEGER);
+			REBSER* blk_memoryused_details = RL_MAKE_BLOCK(48);
+			RXV_INT64(val) = memoryused_details.other;
+			RL_SET_VALUE(blk_memoryused_details, 0, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.string;
+			RL_SET_VALUE(blk_memoryused_details, 1, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.system;
+			RL_SET_VALUE(blk_memoryused_details, 2, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.plugins;
+			RL_SET_VALUE(blk_memoryused_details, 3, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.output;
+			RL_SET_VALUE(blk_memoryused_details, 4, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channel;
+			RL_SET_VALUE(blk_memoryused_details, 5, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.channelgroup;
+			RL_SET_VALUE(blk_memoryused_details, 6, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.codec;
+			RL_SET_VALUE(blk_memoryused_details, 7, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.file;
+			RL_SET_VALUE(blk_memoryused_details, 8, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sound;
+			RL_SET_VALUE(blk_memoryused_details, 9, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.secondaryram;
+			RL_SET_VALUE(blk_memoryused_details, 10, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundgroup;
+			RL_SET_VALUE(blk_memoryused_details, 11, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streambuffer;
+			RL_SET_VALUE(blk_memoryused_details, 12, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspconnection;
+			RL_SET_VALUE(blk_memoryused_details, 13, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dsp;
+			RL_SET_VALUE(blk_memoryused_details, 14, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.dspcodec;
+			RL_SET_VALUE(blk_memoryused_details, 15, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.profile;
+			RL_SET_VALUE(blk_memoryused_details, 16, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.recordbuffer;
+			RL_SET_VALUE(blk_memoryused_details, 17, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverb;
+			RL_SET_VALUE(blk_memoryused_details, 18, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbchannelprops;
+			RL_SET_VALUE(blk_memoryused_details, 19, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.geometry;
+			RL_SET_VALUE(blk_memoryused_details, 20, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.syncpoint;
+			RL_SET_VALUE(blk_memoryused_details, 21, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventsystem;
+			RL_SET_VALUE(blk_memoryused_details, 22, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.musicsystem;
+			RL_SET_VALUE(blk_memoryused_details, 23, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.fev;
+			RL_SET_VALUE(blk_memoryused_details, 24, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.memoryfsb;
+			RL_SET_VALUE(blk_memoryused_details, 25, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventproject;
+			RL_SET_VALUE(blk_memoryused_details, 26, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventgroupi;
+			RL_SET_VALUE(blk_memoryused_details, 27, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbankclass;
+			RL_SET_VALUE(blk_memoryused_details, 28, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.soundbanklist;
+			RL_SET_VALUE(blk_memoryused_details, 29, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.streaminstance;
+			RL_SET_VALUE(blk_memoryused_details, 30, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefclass;
+			RL_SET_VALUE(blk_memoryused_details, 31, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefdefclass;
+			RL_SET_VALUE(blk_memoryused_details, 32, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.sounddefpool;
+			RL_SET_VALUE(blk_memoryused_details, 33, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.reverbdef;
+			RL_SET_VALUE(blk_memoryused_details, 34, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventreverb;
+			RL_SET_VALUE(blk_memoryused_details, 35, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.userproperty;
+			RL_SET_VALUE(blk_memoryused_details, 36, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance;
+			RL_SET_VALUE(blk_memoryused_details, 37, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_complex;
+			RL_SET_VALUE(blk_memoryused_details, 38, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_simple;
+			RL_SET_VALUE(blk_memoryused_details, 39, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_layer;
+			RL_SET_VALUE(blk_memoryused_details, 40, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstance_sound;
+			RL_SET_VALUE(blk_memoryused_details, 41, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelope;
+			RL_SET_VALUE(blk_memoryused_details, 42, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopedef;
+			RL_SET_VALUE(blk_memoryused_details, 43, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventparameter;
+			RL_SET_VALUE(blk_memoryused_details, 44, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventcategory;
+			RL_SET_VALUE(blk_memoryused_details, 45, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventenvelopepoint;
+			RL_SET_VALUE(blk_memoryused_details, 46, val, RXT_INTEGER);
+			RXV_INT64(val) = memoryused_details.eventinstancepool;
+			RL_SET_VALUE(blk_memoryused_details, 47, val, RXT_INTEGER);
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = blk_memoryused_details;
+			RXA_INDEX(frm, 1)  = 0;
+			RXA_TYPE(frm, 1) = RXT_BLOCK;
+			RXA_SERIES(frm, 1) = block;
+			RXA_INDEX(frm, 1)  = 0;
+			return RXR_VALUE;
 		}
 
 	}
